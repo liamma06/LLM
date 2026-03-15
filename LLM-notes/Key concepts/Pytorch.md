@@ -2,9 +2,9 @@
 
 #### Components 
 **Tensor**
-- [[Tensors]] are like data on crack! normal python lists can't be processed 
+- [[tensors]] are like data on crack! normal python lists can't be processed 
 
-**Automatic [[Differentiate]] Engine**
+**[[Automatic Differentiation]] Engine**
 - Like a little minion that helps keep track of steps done and automatically tracks which step caused the problem and how much when it goes wrong.  (Simply backpropagation and model optimization)
 
 **[[Deep Learning]] Library**

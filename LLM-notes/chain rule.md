@@ -1,0 +1,1 @@
+How A affects B and B effects C, you can easily figure out how much A affects C by multiplying the effect at every steps 
