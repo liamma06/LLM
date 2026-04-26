@@ -34,6 +34,22 @@ The natural question is how to know what those neuron values should be:
 **Forward -> Loss -> Backward -> Optimize** 
 
 ## Code understanding 
+```
+        #forward pass: making a prediction
+        logits = model(features)
+
+        #loss calculation: how far off the prediction was
+        loss = F.cross_entropy(logits, labels)
+
+        #backward pass: calculate gradients using chain rule to see how much each param added to the error
+        loss.backward()
+
+        #update weights: based off the gradients
+        optimizer.step()
+
+        #reset gradients for next loop
+        optimizer.zero_grad()
+```
 
 
 
