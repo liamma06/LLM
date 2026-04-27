@@ -1,13 +1,15 @@
 
 For processes to occur, math with 2 [[tensors]] they have to be in the same "room" (CPU vs GPU)
 
+
+
 Using the 
 ```
        .to()
        tensor.to("cuda")
        tensor.to("cpu")
 ```
-you move the data from CPU to GPU and visa versa
+you move the data from CPU to GPU and visa versa ([[CUDA]])
 
 #### Single-CPU training 
 
@@ -21,5 +23,4 @@ features, labels = feature.to(device), labels.to(device)
 
 Moving RAM(CPU) to VRAM(GPU) isn't instant and take time where doing all the processes on CPU might be faster but with LLMs (super math very) the time to transfer data might be worth it .
 
-#### Multiple GPU training 
 
