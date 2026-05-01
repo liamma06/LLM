@@ -1,0 +1,2 @@
+![[Pasted image 20260430233906.png]]
+It is essentially a lookup operation where the token ID is tied a embedding layer weight matrix. However the issue is that the positional context (where the token is located in the actual sentence), which would be provided by doing [[positional Embeddings]] 
