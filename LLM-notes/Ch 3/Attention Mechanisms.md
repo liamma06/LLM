@@ -27,3 +27,7 @@ Once the attention score is computed via dot product we would normalize using so
 Essentially doing a weighted sum of the token embedding with the attention weight and getting a final vector that includes the context information. ![[Pasted image 20260507102643.png]]
 
 ### Computing attention weights for all input tokens 
+![[Pasted image 20260507144641.png]]
+now instead of just computing the attention scores->attention weights->context vector just for the token "journey" it extends to the rest of the tokens. 
+
+
