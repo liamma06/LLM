@@ -24,3 +24,6 @@ output from head are combined ![[Pasted image 20260511120911.png]]
 
 I often had to reference this video! as it was super difficult to visualize what was going on 
 [Attention in transformers, step-by-step | Deep Learning Chapter 6](https://www.youtube.com/watch?v=eMlx5fFNoYc) 
+
+Helped visualize the dimension stuffs and reasoning
+[A Visual Explanation of Multi-Head Attention | by Shravan Kumar | Medium](https://medium.com/@shravankoninti/a-visual-explanation-of-multi-head-attention-6399d86fe51c)
