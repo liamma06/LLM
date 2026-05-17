@@ -74,3 +74,68 @@ class LayerNorm(nn.Module):
 
     
         return self.scale * norm_x + self.shift
+    
+#GELU activation function
+class GELU(nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, x):
+        return 0.5 * x * (1 + torch.tanh(
+            torch.sqrt(torch.tensor(2.0 / torch.pi)) * (x + 0.044715 * torch.pow(x, 3))
+        ))
+
+#feed forward network module 
+class FeedForward(nn.Module):
+    def __init__(self,cfg):
+        super().__init__()
+        self.layers = nn.Sequential(
+            #expand the embedding dimension to 4 times its size, then apply GELU activation, then project back down to original embedding dimension
+            nn.Linear(cfg['emb_dim'], 4 * cfg['emb_dim']),
+            GELU(),
+            nn.Linear(4 * cfg['emb_dim'], cfg['emb_dim'])
+        )
+    def forward(self, x):
+        return self.layers(x)
+
+#Example Deep Neural Network to show shortcut connections 
+class ExampleDeepNeuralNetwork(nn.Module):
+    def __init__(self, layer_sizes, use_shortcut):
+        super().__init__()
+        self.use_shortcut = use_shortcut
+
+        #create a list of layers based on the provided layer sizes (input, output), each followed by a GELU activation
+        self.layers = nn.ModuleList([
+            nn.Sequential(nn.Linear(layer_sizes[0], layer_sizes[1]), GELU()),
+            nn.Sequential(nn.Linear(layer_sizes[1], layer_sizes[2]), GELU()),
+            nn.Sequential(nn.Linear(layer_sizes[2], layer_sizes[3]), GELU()),
+            nn.Sequential(nn.Linear(layer_sizes[3], layer_sizes[4]), GELU()),
+            nn.Sequential(nn.Linear(layer_sizes[4], layer_sizes[5]), GELU())
+        ])
+
+    def forward(self, x):
+        #iterative function to compute x for every layer 
+        for layer in self.layers:
+            layer_output = layer(x) #compute the output of the current layer, input into layer
+
+            #if use_shortcut is true and the input and output shapes match, add the input to the output (residual connection)
+            if self.use_shortcut and x.shape == layer_output.shape:
+                x = x + layer_output
+            else:
+                x = layer_output
+        return x
+
+def print_gradients(model,x):
+    output = model(x)#runs forward pass to compute output
+    target = torch.tensor([[0.]]) #dummy target
+    
+    loss = nn.MSELoss()
+    loss = loss(output, target)#compute loss between model output and target
+
+    loss.backward() #computes gradients of loss with respect to all model parameters, Stored in .grad
+
+    for name, param in model.named_parameters():
+        if 'weight' in name:
+
+            print(f"{name} has gradient mean of {param.grad.abs().mean().item()}")
+
