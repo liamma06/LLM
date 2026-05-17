@@ -139,3 +139,42 @@ def print_gradients(model,x):
 
             print(f"{name} has gradient mean of {param.grad.abs().mean().item()}")
 
+
+#Transfomer Block
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from attention.MultiHead_attention_class import MultiHeadAttention
+
+class TransformerBlock(nn.Module):
+    def __init__(self, cfg):
+        super().__init__()
+        self.att = MultiHeadAttention(
+            d_in=cfg['emb_dim'],
+            d_out=cfg['emb_dim'],
+            context_length=cfg['context_length'],
+            dropout=cfg['drop_rate'],
+            num_heads=cfg['num_heads'],
+            qkv_bias=cfg['qkv_bias']
+        )
+        self.ff = FeedForward(cfg)
+        self.norm1 = LayerNorm(cfg['emb_dim'])
+        self.norm2 = LayerNorm(cfg['emb_dim'])
+        self.drop_shortcut = nn.Dropout(cfg['drop_rate'])
+
+    def forward(self, x):
+
+        #stage 1: attention with shortcut connection
+        shortcut = x
+        x = self.norm1(x) #stablize
+        x = self.att(x) #apply attention
+        x = self.drop_shortcut(x) #random dropout for regularization
+        x = x + shortcut #blend original with new
+
+        #stage 2: feed forward network with shortcut connection
+        shortcut = x 
+        x = self.norm2(x)
+        x = self.ff(x) #apply feed forward network
+        x = self.drop_shortcut(x)
+        x = x + shortcut
+
+        return x
