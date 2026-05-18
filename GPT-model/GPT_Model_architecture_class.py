@@ -212,3 +212,30 @@ class GPTModel (nn.Module):
         x = self.final_norm(x) #final layer norm for stablization
         logits = self.out_head(x) #project to vocab size for logits (prediction of next token)
         return logits
+
+#simple generate text function 
+def generate_text_simple( model, idx, max_new_tokens, context_size):
+
+    for _ in range(max_new_tokens):
+        #only take the last context size as inputs to model
+        #this is because the model can only attend to a limited context size, so we need to make sure we are only feeding in the most recent tokens that fit within that context window
+        idx_cond = idx[:, -context_size:]
+
+
+        with torch.no_grad():# tells pytorch not to computes gradients (we aren't training)
+            logits = model(idx_cond)
+
+        #take very last token (keeps batch same ,and all scores across vocab)
+        logits = logits[:, -1, :]
+
+        #apply softmax to turn into probabilites scores
+        probas = torch.softmax(logits, dim=-1)
+
+        #take token with highest probability as the next token, 
+        #keepdim true to maintain the same number of dimensions (for concatenation later)
+        idx_next = torch.argmax(probas, dim=-1, keepdim=True)
+
+        #generate the next token and append to existing sequence of tokens 
+        idx = torch.cat((idx, idx_next), dim=1)
+
+    return idx
