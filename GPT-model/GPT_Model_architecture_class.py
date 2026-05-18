@@ -144,7 +144,6 @@ def print_gradients(model,x):
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from attention.MultiHead_attention_class import MultiHeadAttention
-
 class TransformerBlock(nn.Module):
     def __init__(self, cfg):
         super().__init__()
@@ -178,3 +177,38 @@ class TransformerBlock(nn.Module):
         x = x + shortcut
 
         return x
+    
+# GPT MODEL ARCHITECTURE IMPLEMENTATION 
+class GPTModel (nn.Module):
+    def __init__(self,cfg):
+        super().__init__()
+        #token embedding layer to convert input token to embeddings
+        self.tok_emb = nn.Embedding(cfg['vocab_size'], cfg['emb_dim'])
+        self.pos_emb = nn.Embedding(cfg['context_length'], cfg['emb_dim'])
+        self.drop_emb = nn.Dropout(cfg['drop_rate'])
+
+        #stack of transformer blocks
+        #nn.Sequential allows us to stack multiple layers together, and it will pass the input through each layer in order
+        self.trf_blocks = nn.Sequential(
+            *[TransformerBlock(cfg) for _ in range(cfg['num_layers'])]
+        )
+
+        #final layer norm before output projection, helps stabilize training and improve performance
+        self.final_norm = LayerNorm(cfg['emb_dim'])
+
+        #output head to project the final embeddings to the vocabulary size, allowing us to get logits for each token in the vocabulary (for next token prediction)
+        #bias is false because we want the model to learn to predict the next token based solely on the input embeddings, without any additional bias term
+        self.out_head = nn.Linear(cfg['emb_dim'], cfg['vocab_size'], bias=False)
+
+    def forward(self, in_idx):
+        batch_size, seq_len = in_idx.shape
+        tok_embeds = self.tok_emb(in_idx) #convert input token indices to embeddings
+        pos_embeds = self.pos_emb(
+            torch.arange(seq_len, device=in_idx.device) #create position indices for the sequence and convert to embeddings
+        )
+        x = tok_embeds + pos_embeds #final embedding with both token and position
+        x = self.drop_emb(x) #dropout 
+        x = self.trf_blocks(x) #pass data through stack of transformer block
+        x = self.final_norm(x) #final layer norm for stablization
+        logits = self.out_head(x) #project to vocab size for logits (prediction of next token)
+        return logits
