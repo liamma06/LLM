@@ -115,3 +115,44 @@ def generate_and_print_sample (model, tokenizer, device, start_context):
     decoded_text = token_ids_to_text(token_ids, tokenizer)#convert generated token ids back to text
     print(decoded_text.replace("\n", " "))
     model.train()
+
+
+#new generation with temperature sampling and top K
+def generate(model, idx, max_new_tokens, context_size, temperature=1.0, top_k=None, eos_id=None):
+    for _ in range(max_new_tokens):
+        idx_cond = idx [:, -context_size:]
+        with torch.no_grad():
+            logits = model(idx_cond)
+        
+        logits = logits[:, -1,:] #take last token logits for next token prediction
+
+        if top_k is not None:
+            top_logits, _ = torch.topk(logits, top_k) #get top K logits 
+            min_val = top_logits[:,-1] #lower bound for logits
+            logits = torch.where(
+                logits < min_val, #condition
+                torch.tensor(float("-inf"), device=logits.device), #set -inf to exclude
+                logits #rest stay same
+            )
+
+        if temperature > 0.0:
+            logits = logits / temperature #scale by temperature
+
+            #subtract max logit for numerical stability before applying softmax (prevents overflow)
+            logits = logits - logits.max(dim=-1, keepdim=True).values 
+
+            probs = torch.softmax(logits, dim=-1) #softmax to get probabilities
+
+            #choose next token by sampling from the probability distribution defined by the logits (after applying temperature and top-k filtering)
+            idx_next = torch.multinomial(probs, num_samples=1) 
+        else:
+            idx_next = torch.argmax(logits, dim=-1, keepdim=True)
+
+        if idx_next == eos_id:
+            break
+            
+        #append prediction to existing sequence of tokens
+        #needed to be included in next input for next word. 
+        idx = torch.cat((idx, idx_next), dim=1)
+
+    return idx
