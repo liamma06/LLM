@@ -1,8 +1,11 @@
-import torch 
+import torch
 import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from GPT_model.GPT_Model_architecture_class import generate_text_simple
+try:
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from GPT_model.GPT_Model_architecture_class import generate_text_simple
+except ImportError:
+    from GPT_Model_architecture_class import generate_text_simple
 
 #convert text to token ids and back using the tokenizer.
 def text_to_token_ids (text, tokenizer):
@@ -52,21 +55,28 @@ def calc_loss_loader(data_loader, model, device, num_batches = None):
 
 
 #main function for pretraining LLMs 
-def train_model_simple(model, train_loader, val_loader, optimizer, device, num_epochs = 10, eval_freq = 1, eval_iter = 1, start_context = "", tokenizer = None):
+def train_model_simple(model, train_loader, val_loader, optimizer, device, num_epochs,
+                       eval_freq, eval_iter, start_context, tokenizer):
     train_losses, val_losses, track_tokens_seen = [], [], []
+    
+    #global step keep track of how many batches we've processed
+    #tokens_seen keeps track of how many tokens we've processed across all batches, which is useful for monitoring training progress and scheduling evaluations.
     tokens_seen , global_step = 0 , -1
 
+    #traing for number of epochs
     for epoch in range(num_epochs):
         model.train()
 
+        #iterate through data loader
         for input_bath, target_batch in train_loader:
-            optimizer.zero_grad()
-            loss = calc_loss_batch(input_bath, target_batch, model, device)
-            loss.backward()
-            optimizer.step()
-            tokens_seen += input_bath.numel()
+            optimizer.zero_grad() #remove old gradient from previous batch
+            loss = calc_loss_batch(input_bath, target_batch, model, device) #calculate loss for current batch (forward pass)
+            loss.backward() #compute gradients (backward pass -> loss for every weight param)
+            optimizer.step() #update model weights based on computed gradients (gradient descent step)
+            tokens_seen += input_bath.numel() #num of elements -> ex [2,256] =512 tokens seen
             global_step += 1
 
+            #evaluate model on train and vali every eval_freq steps and store losses and tokens seen for monitoring training progress.
             if global_step % eval_freq == 0:
                 train_loss, vall_loss = evaluate_model(model, train_loader, val_loader, device, eval_iter)
                 train_losses.append(train_loss)
@@ -78,6 +88,7 @@ def train_model_simple(model, train_loader, val_loader, optimizer, device, num_e
 
     return train_losses, val_losses, track_tokens_seen
 
+#evaluate model 
 def evaluate_model(model, train_loader, val_loader, device, eval_iter):
     model.eval()
     with torch.no_grad():
@@ -87,14 +98,20 @@ def evaluate_model(model, train_loader, val_loader, device, eval_iter):
     model.train()
     return train_loss, val_loss
 
+#generate text sample from model 
 def generate_and_print_sample (model, tokenizer, device, start_context):
     model.eval()
+    
+    #read dimension of model positional embedding layer and tells the max number of token rows it can accept
     context_size = model.pos_emb.weight.shape[0]
-    encoded = text_to_token_ids(start_context, tokenizer).to(device)
+    encoded = text_to_token_ids(start_context, tokenizer).to(device) #convert start context to tokens and input tensor
+    
     with torch.no_grad():
+        #generate text by feeding the model the encoded start context and letting it predict the next tokens until it reaches the max_new_tokens limit or the end of text token.
+        #by passing model it uses the model's weights to predict
         token_ids = generate_text_simple(
             model=model, idx = encoded, max_new_tokens = 50, context_size = context_size
         )
-    decoded_text = token_ids_to_text(token_ids, tokenizer)
+    decoded_text = token_ids_to_text(token_ids, tokenizer)#convert generated token ids back to text
     print(decoded_text.replace("\n", " "))
     model.train()
