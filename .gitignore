@@ -3,9 +3,9 @@
 .venv
 **/__pycache__/
 
-Pretraining-on-unlabeled-data/4.66
-Pretraining-on-unlabeled-data/gpt2/
-Pretraining-on-unlabeled-data/model.pth
-Pretraining-on-unlabeled-data/model_and_optimizer.pth
+Pretraining_on_unlabeled_data/4.66
+Pretraining_on_unlabeled_data/gpt2/
+Pretraining_on_unlabeled_data/model.pth
+Pretraining_on_unlabeled_data/model_and_optimizer.pth
 sms_spam_collection.zip
-
+Classif_Fine_tuning/gpt2/
