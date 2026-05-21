@@ -11,5 +11,5 @@ We are able to "predict" the next word but fine tuning teaches the model how to 
 In the final output layer of the model instead of prediction the word it outputs a probability for specific label (eg: Spam, not spam). The model becomes completely restricted for spam detection you can't ask further questions (eg: why is this spam?)
 ![[Pasted image 20260519222213.png|430]]
 
-- **Instruction Fine Tuning:**
+- **[[Instruction Fine Tuning]]:**
 It trained to understand the intent of the prompt
