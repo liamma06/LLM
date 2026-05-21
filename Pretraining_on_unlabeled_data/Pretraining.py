@@ -78,9 +78,9 @@ def train_model_simple(model, train_loader, val_loader, optimizer, device, num_e
 
             #evaluate model on train and vali every eval_freq steps and store losses and tokens seen for monitoring training progress.
             if global_step % eval_freq == 0:
-                train_loss, vall_loss = evaluate_model(model, train_loader, val_loader, device, eval_iter)
+                train_loss, val_loss = evaluate_model(model, train_loader, val_loader, device, eval_iter)
                 train_losses.append(train_loss)
-                val_losses.append(vall_loss)
+                val_losses.append(val_loss)
                 track_tokens_seen.append(tokens_seen)
                 print(f"Ep: {epoch+1} (Step {global_step:06d}): " f"Train loss {train_loss: .3f}" f"Val loss {val_loss: .3f}")
 
