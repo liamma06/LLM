@@ -9,3 +9,7 @@ Pretraining_on_unlabeled_data/model.pth
 Pretraining_on_unlabeled_data/model_and_optimizer.pth
 sms_spam_collection.zip
 Classif_Fine_tuning/gpt2/
+
+# Ignore PyTorch model files
+*.pth
+*.pt
